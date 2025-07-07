@@ -8,7 +8,6 @@ A comprehensive authentication package for NestJS applications providing **JWT**
 - **Strategy Pattern**: Clean architecture with IAuthStrategy interface
 - **Auto-Detection**: Automatically detects authentication method from requests
 - **Redis-Only Sessions**: Simple Redis-only session storage (no memory fallback)
-- **Zero Breaking Changes**: Existing microservices work without modification
 - **IUser Interface**: Consistent user data structure across all auth methods
 - **Multi-Device Sessions**: Track and manage sessions across devices
 - **Token Revocation**: Secure JWT token invalidation with Redis
@@ -378,5 +377,3 @@ For issues and questions:
 MIT License - see LICENSE file for details.
 
 ---
-
-**Made with ❤️ for universal NestJS applications**
