@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import {  UnifiedAuthResult, UnifiedAuthInput } from './user.interface';
+import { UnifiedAuthResult, UnifiedAuthInput } from './user.interface';
 
 /**
  * Unified Authentication Strategy Interface
@@ -63,7 +63,10 @@ export interface IAuthStrategy {
    * @param currentIdentifier - Current session ID or token
    * @returns Number of invalidated sessions/tokens
    */
-  invalidateOtherSessions(userId: number, currentIdentifier: string): Promise<number>;
+  invalidateOtherSessions(
+    userId: number,
+    currentIdentifier: string,
+  ): Promise<number>;
 
   /**
    * Handle password change session invalidation
@@ -73,9 +76,9 @@ export interface IAuthStrategy {
    * @returns Number of invalidated sessions/tokens
    */
   handlePasswordChange(
-    userId: number, 
-    policy: PasswordChangePolicy, 
-    currentIdentifier?: string
+    userId: number,
+    policy: PasswordChangePolicy,
+    currentIdentifier?: string,
   ): Promise<number>;
 
   /**
@@ -110,8 +113,8 @@ export interface AuthSessionInfo {
  */
 export enum PasswordChangePolicy {
   INVALIDATE_ALL = 'invalidate_all',
-  INVALIDATE_OTHERS = 'invalidate_others', 
-  KEEP_ALL = 'keep_all'
+  INVALIDATE_OTHERS = 'invalidate_others',
+  KEEP_ALL = 'keep_all',
 }
 
 /**
@@ -132,4 +135,4 @@ export interface AuthStats {
 export interface IAuthStrategyFactory {
   createStrategy(type: 'jwt' | 'session'): IAuthStrategy;
   getAvailableStrategies(): string[];
-} 
+}

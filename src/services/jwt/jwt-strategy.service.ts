@@ -179,11 +179,8 @@ export class JwtStrategyService implements IAuthStrategy {
    * Invalidate all user sessions (revoke all tokens for user)
    */
   async invalidateAllUserSessions(userId: number): Promise<number> {
-    try {
-      return 0;
-    } catch (error) {
-      return 0;
-    }
+    // JWT is stateless, no sessions to invalidate
+    return 0;
   }
 
   /**
@@ -193,11 +190,8 @@ export class JwtStrategyService implements IAuthStrategy {
     userId: number,
     currentToken: string,
   ): Promise<number> {
-    try {
-      return 0;
-    } catch (error) {
-      return 0;
-    }
+    // JWT is stateless, no sessions to invalidate
+    return 0;
   }
 
   /**
@@ -263,7 +257,7 @@ export class JwtStrategyService implements IAuthStrategy {
       this.authOptions?.cookies?.names?.accessToken || 'access-token';
 
     // Check cookies first using configured name
-    if (request.cookies && request.cookies[accessTokenCookieName]) {
+    if (request.cookies?.[accessTokenCookieName]) {
       return request.cookies[accessTokenCookieName];
     }
 

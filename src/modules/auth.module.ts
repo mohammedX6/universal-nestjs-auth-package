@@ -87,7 +87,6 @@ export interface AuthModuleOptions {
       refreshMaxAge?: number; // Refresh token max age for remember me (default: 30 days)
     };
   };
- 
 }
 
 /**

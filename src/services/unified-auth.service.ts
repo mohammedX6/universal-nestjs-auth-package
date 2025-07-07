@@ -3,13 +3,20 @@ import { Request } from 'express';
 import { JwtSignOptions } from '@nestjs/jwt';
 import { AuthStrategyFactory } from './auth-strategy.factory';
 import { AuthService } from './jwt/auth.service';
-import { IUser, UnifiedAuthResult, UnifiedAuthInput } from '../interfaces/user.interface';
+import {
+  IUser,
+  UnifiedAuthResult,
+  UnifiedAuthInput,
+} from '../interfaces/user.interface';
 import { AuthModuleOptions } from '../modules/auth.module';
-import { AuthSessionInfo, PasswordChangePolicy } from '../interfaces/auth-strategy.interface';
-import { 
-  AuthenticationFailedException, 
+import {
+  AuthSessionInfo,
+  PasswordChangePolicy,
+} from '../interfaces/auth-strategy.interface';
+import {
+  AuthenticationFailedException,
   StrategyNotAvailableException,
-  ValidationException 
+  ValidationException,
 } from '../exceptions/auth.exceptions';
 
 /**
@@ -23,7 +30,9 @@ export class UnifiedAuthService {
   constructor(
     private readonly strategyFactory: AuthStrategyFactory,
     private readonly authService: AuthService,
-    @Optional() @Inject('AUTH_MODULE_OPTIONS') private readonly authOptions?: AuthModuleOptions,
+    @Optional()
+    @Inject('AUTH_MODULE_OPTIONS')
+    private readonly authOptions?: AuthModuleOptions,
   ) {}
 
   // JWT Token Methods - delegated to AuthService
@@ -97,7 +106,10 @@ export class UnifiedAuthService {
    * @param payload - Token payload
    * @returns Object containing access and refresh tokens
    */
-  generateTokenPair(payload: any): { accessToken: string; refreshToken: string } {
+  generateTokenPair(payload: any): {
+    accessToken: string;
+    refreshToken: string;
+  } {
     return this.authService.generateTokenPair(payload);
   }
 
@@ -107,22 +119,32 @@ export class UnifiedAuthService {
    * @param request - HTTP request object
    * @returns Unified authentication result with IUser
    */
-  async login(input: UnifiedAuthInput, request: Request): Promise<UnifiedAuthResult> {
+  async login(
+    input: UnifiedAuthInput,
+    request: Request,
+  ): Promise<UnifiedAuthResult> {
     try {
       // Validate input
       if (!input.userData) {
-        throw new ValidationException('User data is required for authentication');
+        throw new ValidationException(
+          'User data is required for authentication',
+        );
       }
       const strategy = this.getStrategyForLogin(input);
       const result = await strategy.login(input, request);
 
       return result;
     } catch (error) {
-      if (error instanceof ValidationException || error instanceof StrategyNotAvailableException) {
+      if (
+        error instanceof ValidationException ||
+        error instanceof StrategyNotAvailableException
+      ) {
         throw error;
       }
 
-      throw new AuthenticationFailedException(`Authentication failed: ${error.message}`);
+      throw new AuthenticationFailedException(
+        `Authentication failed: ${error.message}`,
+      );
     }
   }
 
@@ -138,7 +160,7 @@ export class UnifiedAuthService {
       if (strategy) {
         return await strategy.validateAuth(request);
       }
-      
+
       // If no strategy detected, try default strategy
       const defaultStrategy = this.strategyFactory.getDefaultStrategy();
       return await defaultStrategy.validateAuth(request);
@@ -152,19 +174,23 @@ export class UnifiedAuthService {
    * @param request - HTTP request object
    * @returns Success status
    */
-  async logout(request: Request): Promise<{ success: boolean; method: string[] }> {
+  async logout(
+    request: Request,
+  ): Promise<{ success: boolean; method: string[] }> {
     const methods: string[] = [];
     let success = false;
 
     try {
       // Try to logout from all available strategies
       const availableStrategies = this.strategyFactory.getAvailableStrategies();
-      
+
       for (const strategyType of availableStrategies) {
         try {
-          const strategy = this.strategyFactory.createStrategy(strategyType as 'jwt' | 'session');
+          const strategy = this.strategyFactory.createStrategy(
+            strategyType as 'jwt' | 'session',
+          );
           const result = await strategy.logout(request);
-          
+
           if (result.success) {
             methods.push(strategyType);
             success = true;
@@ -201,7 +227,7 @@ export class UnifiedAuthService {
       if (strategy) {
         return await strategy.refresh(request);
       }
-      
+
       return null;
     } catch (error) {
       return null;
@@ -214,27 +240,32 @@ export class UnifiedAuthService {
    * @param strategyType - Optional strategy type, defaults to auto-detect
    * @returns Array of session/token information
    */
-  async getUserSessions(userId: number, strategyType?: 'jwt' | 'session'): Promise<AuthSessionInfo[]> {
+  async getUserSessions(
+    userId: number,
+    strategyType?: 'jwt' | 'session',
+  ): Promise<AuthSessionInfo[]> {
     try {
       if (strategyType) {
         const strategy = this.strategyFactory.createStrategy(strategyType);
         return await strategy.getUserSessions(userId);
       }
-      
+
       // Get sessions from all available strategies
       const allSessions: AuthSessionInfo[] = [];
       const availableStrategies = this.strategyFactory.getAvailableStrategies();
-      
+
       for (const type of availableStrategies) {
         try {
-          const strategy = this.strategyFactory.createStrategy(type as 'jwt' | 'session');
+          const strategy = this.strategyFactory.createStrategy(
+            type as 'jwt' | 'session',
+          );
           const sessions = await strategy.getUserSessions(userId);
           allSessions.push(...sessions);
         } catch (error) {
           // Continue with other strategies
         }
       }
-      
+
       return allSessions;
     } catch (error) {
       return [];
@@ -250,19 +281,22 @@ export class UnifiedAuthService {
    */
   async updateAllUserSessionsData(
     userId: number,
-    updateData: Partial<IUser>
+    updateData: Partial<IUser>,
   ): Promise<number> {
     try {
       // Only session strategy supports updating user data
       const availableStrategies = this.strategyFactory.getAvailableStrategies();
-      
+
       if (availableStrategies.includes('session')) {
         const sessionStrategy = this.strategyFactory.createStrategy('session');
         if ('updateAllUserSessionsData' in sessionStrategy) {
-          return await (sessionStrategy as any).updateAllUserSessionsData(userId, updateData);
+          return await (sessionStrategy as any).updateAllUserSessionsData(
+            userId,
+            updateData,
+          );
         }
       }
-      
+
       return 0;
     } catch (error) {
       return 0;
@@ -278,19 +312,22 @@ export class UnifiedAuthService {
    */
   async updateUserSessionsFields(
     userId: number,
-    fieldUpdates: Record<string, any>
+    fieldUpdates: Record<string, any>,
   ): Promise<number> {
     try {
       // Only session strategy supports updating user data
       const availableStrategies = this.strategyFactory.getAvailableStrategies();
-      
+
       if (availableStrategies.includes('session')) {
         const sessionStrategy = this.strategyFactory.createStrategy('session');
         if ('updateUserSessionsFields' in sessionStrategy) {
-          return await (sessionStrategy as any).updateUserSessionsFields(userId, fieldUpdates);
+          return await (sessionStrategy as any).updateUserSessionsFields(
+            userId,
+            fieldUpdates,
+          );
         }
       }
-      
+
       return 0;
     } catch (error) {
       return 0;
@@ -303,27 +340,32 @@ export class UnifiedAuthService {
    * @param strategyType - Optional strategy type, defaults to all
    * @returns Number of invalidated sessions/tokens
    */
-  async invalidateAllUserSessions(userId: number, strategyType?: 'jwt' | 'session'): Promise<number> {
+  async invalidateAllUserSessions(
+    userId: number,
+    strategyType?: 'jwt' | 'session',
+  ): Promise<number> {
     try {
       if (strategyType) {
         const strategy = this.strategyFactory.createStrategy(strategyType);
         return await strategy.invalidateAllUserSessions(userId);
       }
-      
+
       // Invalidate sessions from all available strategies
       let totalInvalidated = 0;
       const availableStrategies = this.strategyFactory.getAvailableStrategies();
-      
+
       for (const type of availableStrategies) {
         try {
-          const strategy = this.strategyFactory.createStrategy(type as 'jwt' | 'session');
+          const strategy = this.strategyFactory.createStrategy(
+            type as 'jwt' | 'session',
+          );
           const invalidated = await strategy.invalidateAllUserSessions(userId);
           totalInvalidated += invalidated;
         } catch (error) {
           // Continue with other strategies
         }
       }
-      
+
       return totalInvalidated;
     } catch (error) {
       return 0;
@@ -338,30 +380,38 @@ export class UnifiedAuthService {
    * @returns Number of invalidated sessions/tokens
    */
   async invalidateOtherSessions(
-    userId: number, 
-    currentIdentifier: string, 
-    strategyType?: 'jwt' | 'session'
+    userId: number,
+    currentIdentifier: string,
+    strategyType?: 'jwt' | 'session',
   ): Promise<number> {
     try {
       if (strategyType) {
         const strategy = this.strategyFactory.createStrategy(strategyType);
-        return await strategy.invalidateOtherSessions(userId, currentIdentifier);
+        return await strategy.invalidateOtherSessions(
+          userId,
+          currentIdentifier,
+        );
       }
-      
+
       // Invalidate from all available strategies
       let totalInvalidated = 0;
       const availableStrategies = this.strategyFactory.getAvailableStrategies();
-      
+
       for (const type of availableStrategies) {
         try {
-          const strategy = this.strategyFactory.createStrategy(type as 'jwt' | 'session');
-          const invalidated = await strategy.invalidateOtherSessions(userId, currentIdentifier);
+          const strategy = this.strategyFactory.createStrategy(
+            type as 'jwt' | 'session',
+          );
+          const invalidated = await strategy.invalidateOtherSessions(
+            userId,
+            currentIdentifier,
+          );
           totalInvalidated += invalidated;
         } catch (error) {
           // Continue with other strategies
         }
       }
-      
+
       return totalInvalidated;
     } catch (error) {
       return 0;
@@ -377,37 +427,46 @@ export class UnifiedAuthService {
    * @returns Number of invalidated sessions/tokens
    */
   async handlePasswordChange(
-    userId: number, 
-    policy: PasswordChangePolicy, 
+    userId: number,
+    policy: PasswordChangePolicy,
     currentIdentifier?: string,
-    strategyType?: 'jwt' | 'session'
+    strategyType?: 'jwt' | 'session',
   ): Promise<number> {
     try {
       if (strategyType) {
         const strategy = this.strategyFactory.createStrategy(strategyType);
-        return await strategy.handlePasswordChange(userId, policy, currentIdentifier);
+        return await strategy.handlePasswordChange(
+          userId,
+          policy,
+          currentIdentifier,
+        );
       }
-      
+
       // Handle password change for all available strategies
       let totalInvalidated = 0;
       const availableStrategies = this.strategyFactory.getAvailableStrategies();
-      
+
       for (const type of availableStrategies) {
         try {
-          const strategy = this.strategyFactory.createStrategy(type as 'jwt' | 'session');
-          const invalidated = await strategy.handlePasswordChange(userId, policy, currentIdentifier);
+          const strategy = this.strategyFactory.createStrategy(
+            type as 'jwt' | 'session',
+          );
+          const invalidated = await strategy.handlePasswordChange(
+            userId,
+            policy,
+            currentIdentifier,
+          );
           totalInvalidated += invalidated;
         } catch (error) {
           // Continue with other strategies
         }
       }
-      
+
       return totalInvalidated;
     } catch (error) {
       return 0;
     }
   }
-
 
   /**
    * Check if authentication service is available
@@ -421,17 +480,17 @@ export class UnifiedAuthService {
 
   private getStrategyForLogin(input: UnifiedAuthInput) {
     const authMethod = input.authMethod || 'auto';
-    
+
     switch (authMethod) {
       case 'jwt':
         return this.strategyFactory.createStrategy('jwt');
-      
+
       case 'session':
         return this.strategyFactory.createStrategy('session');
-      
+
       case 'auto':
       default:
         return this.strategyFactory.getDefaultStrategy();
     }
   }
-} 
+}

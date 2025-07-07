@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, Inject, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  Inject,
+  Optional,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
 import { Request } from 'express';
@@ -14,11 +19,12 @@ import { extractSessionId } from '../utils/index';
  */
 @Injectable()
 export class SessionStrategy extends PassportStrategy(Strategy, 'session') {
-  
   constructor(
     private readonly sessionStrategyService: SessionStrategyService,
     private readonly deviceDetectionService: DeviceDetectionService,
-    @Optional() @Inject('AUTH_MODULE_OPTIONS') private readonly authOptions?: AuthModuleOptions
+    @Optional()
+    @Inject('AUTH_MODULE_OPTIONS')
+    private readonly authOptions?: AuthModuleOptions,
   ) {
     super();
   }
@@ -32,24 +38,23 @@ export class SessionStrategy extends PassportStrategy(Strategy, 'session') {
     try {
       // Get session ID from cookie or header
       const sessionId = this.extractSessionId(req);
-      
+
       if (!sessionId) {
         throw new UnauthorizedException('No session found');
       }
 
       // Validate session
       const validation = await this.sessionStrategyService.validateAuth(req);
-      
-      if (!validation || !validation.authenticated) {
+
+      if (!validation?.authenticated) {
         throw new UnauthorizedException('Invalid session');
       }
 
       // Add session info to request
       req.sessionId = validation.sessionId;
-      
+
       // Return user data for further processing
       return validation.user;
-
     } catch (error) {
       throw new UnauthorizedException('Session validation failed');
     }
@@ -62,7 +67,10 @@ export class SessionStrategy extends PassportStrategy(Strategy, 'session') {
    */
   private extractSessionId(req: Request): string | null {
     // Use the centralized utility function with configured session name
-    const sessionName = this.authOptions?.session?.name || process.env.SESSION_NAME || 'sessionId';
+    const sessionName =
+      this.authOptions?.session?.name ||
+      process.env.SESSION_NAME ||
+      'sessionId';
     return extractSessionId(req, sessionName);
   }
-} 
+}

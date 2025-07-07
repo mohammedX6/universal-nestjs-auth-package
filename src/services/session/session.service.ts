@@ -18,6 +18,7 @@ import { IUser } from '../../interfaces/user.interface';
 import { SessionModuleOptions } from '../../modules/session.module';
 import { generateSecureSessionId } from '../../utils';
 import { SessionState, DeviceType } from '../../types/auth.types';
+import * as crypto from 'crypto';
 
 /**
  * Enhanced session management service with Redis storage
@@ -356,7 +357,7 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
 
         // Remove session data
         const deleted = await this.executeRedisOperation(async () => {
-          return await this.redisClient!.del(this.getSessionKey(sessionId));
+          return this.redisClient!.del(this.getSessionKey(sessionId));
         });
 
         if (deleted) {
@@ -373,7 +374,7 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
         this.logger.warn(`Session not found for destruction: ${sessionId}`);
         // Try to remove from Redis anyway in case it exists but couldn't be parsed
         await this.executeRedisOperation(async () => {
-          return await this.redisClient!.del(this.getSessionKey(sessionId));
+          return this.redisClient!.del(this.getSessionKey(sessionId));
         });
         return false;
       }
@@ -556,13 +557,13 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
   ): Promise<number> {
     switch (policy) {
       case PasswordChangeSessionPolicy.INVALIDATE_ALL:
-        return await this.invalidateAllUserSessions(userId);
+        return this.invalidateAllUserSessions(userId);
 
       case PasswordChangeSessionPolicy.INVALIDATE_OTHERS:
         if (currentSessionId) {
-          return await this.invalidateOtherSessions(userId, currentSessionId);
+          return this.invalidateOtherSessions(userId, currentSessionId);
         } else {
-          return await this.invalidateAllUserSessions(userId);
+          return this.invalidateAllUserSessions(userId);
         }
 
       case PasswordChangeSessionPolicy.KEEP_ALL:
@@ -570,8 +571,8 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
 
       default:
         return currentSessionId
-          ? await this.invalidateOtherSessions(userId, currentSessionId)
-          : await this.invalidateAllUserSessions(userId);
+          ? this.invalidateOtherSessions(userId, currentSessionId)
+          : this.invalidateAllUserSessions(userId);
     }
   }
 
@@ -597,7 +598,7 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
    * Get session from Redis with error handling
    */
   private async getSession(sessionId: string): Promise<UserSession | null> {
-    return await this.executeRedisOperation(async () => {
+    return this.executeRedisOperation(async () => {
       const sessionData = await this.redisClient!.get(
         this.getSessionKey(sessionId),
       );
@@ -694,8 +695,6 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
    * Uses proper auth types for better type safety
    */
   private generateDeviceFingerprint(deviceInfo: DeviceInfo): string {
-    const crypto = require('crypto');
-
     // Ensure we have proper default values using auth types
     const deviceType: DeviceType = deviceInfo.deviceType || 'unknown';
     const browser = deviceInfo.browser || 'unknown';
@@ -745,7 +744,7 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
   private async getUserSessionIds(userId: number): Promise<string[]> {
     const result = await this.executeRedisOperation(async () => {
       const key = this.getUserSessionsKey(userId);
-      return await this.redisClient!.sMembers(key);
+      return this.redisClient!.sMembers(key);
     });
     return result || [];
   }

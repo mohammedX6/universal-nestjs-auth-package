@@ -167,13 +167,13 @@ export class AuthStrategyFactory implements IAuthStrategyFactory {
       this.authOptions?.cookies?.names?.accessToken || 'access-token';
 
     // Check cookies using configured name
-    if (request.cookies && request.cookies[accessTokenCookieName]) {
+    if (request.cookies?.[accessTokenCookieName]) {
       return true;
     }
 
     // Check Authorization header
     const authHeader = request.headers?.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ')) {
       return true;
     }
 
@@ -189,13 +189,13 @@ export class AuthStrategyFactory implements IAuthStrategyFactory {
       'sessionId';
 
     // Check cookies
-    if (request.cookies && request.cookies[sessionName]) {
+    if (request.cookies?.[sessionName]) {
       return true;
     }
 
     // Check Authorization header with Session prefix
     const authHeader = request.headers?.authorization;
-    if (authHeader && authHeader.startsWith('Session ')) {
+    if (authHeader?.startsWith('Session ')) {
       return true;
     }
 

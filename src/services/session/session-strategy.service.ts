@@ -2,13 +2,17 @@ import { Injectable, Inject, Optional } from '@nestjs/common';
 import { Request } from 'express';
 import { SessionService } from './session.service';
 import { DeviceDetectionService } from '../device-detection.service';
-import { 
-  IAuthStrategy, 
-  AuthSessionInfo, 
-  PasswordChangePolicy, 
-  AuthStats 
+import {
+  IAuthStrategy,
+  AuthSessionInfo,
+  PasswordChangePolicy,
+  AuthStats,
 } from '../../interfaces/auth-strategy.interface';
-import { IUser, UnifiedAuthResult, UnifiedAuthInput } from '../../interfaces/user.interface';
+import {
+  IUser,
+  UnifiedAuthResult,
+  UnifiedAuthInput,
+} from '../../interfaces/user.interface';
 import { AuthModuleOptions } from '../../modules/auth.module';
 import { PasswordChangeSessionPolicy } from '../../interfaces/session.interface';
 import { getClientIp, extractSessionId } from '../../utils/index';
@@ -23,17 +27,22 @@ export class SessionStrategyService implements IAuthStrategy {
   constructor(
     private readonly sessionService: SessionService,
     private readonly deviceDetectionService: DeviceDetectionService,
-    @Optional() @Inject('AUTH_MODULE_OPTIONS') private readonly authOptions?: AuthModuleOptions,
+    @Optional()
+    @Inject('AUTH_MODULE_OPTIONS')
+    private readonly authOptions?: AuthModuleOptions,
   ) {}
 
   /**
    * Login with session creation
    */
-  async login(input: UnifiedAuthInput, request: Request): Promise<UnifiedAuthResult> {
+  async login(
+    input: UnifiedAuthInput,
+    request: Request,
+  ): Promise<UnifiedAuthResult> {
     try {
       const deviceInfo = this.deviceDetectionService.extractDeviceInfo(
         request.headers['user-agent'] || '',
-        getClientIp(request)
+        getClientIp(request),
       );
 
       const sessionTimeout = input.options?.maxAge || 24 * 60 * 60 * 1000; // 24 hours
@@ -44,8 +53,8 @@ export class SessionStrategyService implements IAuthStrategy {
         deviceInfo,
         {
           sessionTimeout,
-          metadata: input.options?.metadata
-        }
+          metadata: input.options?.metadata,
+        },
       );
 
       return {
@@ -53,7 +62,7 @@ export class SessionStrategyService implements IAuthStrategy {
         authenticated: true,
         authMethod: 'session',
         timestamp: new Date(),
-        sessionId: session.sessionId
+        sessionId: session.sessionId,
       };
     } catch (error) {
       throw new Error(`Session login failed: ${error.message}`);
@@ -76,7 +85,7 @@ export class SessionStrategyService implements IAuthStrategy {
         authenticated: true,
         authMethod: 'session',
         timestamp: new Date(),
-        sessionId
+        sessionId,
       };
     } catch (error) {
       return null;
@@ -86,7 +95,9 @@ export class SessionStrategyService implements IAuthStrategy {
   /**
    * Logout by destroying session
    */
-  async logout(request: Request): Promise<{ success: boolean; message?: string }> {
+  async logout(
+    request: Request,
+  ): Promise<{ success: boolean; message?: string }> {
     try {
       const sessionId = this.extractSessionId(request);
       if (!sessionId) {
@@ -94,9 +105,11 @@ export class SessionStrategyService implements IAuthStrategy {
       }
 
       const success = await this.sessionService.destroySession(sessionId);
-      return { 
-        success, 
-        message: success ? 'Session destroyed successfully' : 'Failed to destroy session' 
+      return {
+        success,
+        message: success
+          ? 'Session destroyed successfully'
+          : 'Failed to destroy session',
       };
     } catch (error) {
       return { success: false, message: `Logout failed: ${error.message}` };
@@ -129,8 +142,8 @@ export class SessionStrategyService implements IAuthStrategy {
   async getUserSessions(userId: number): Promise<AuthSessionInfo[]> {
     try {
       const sessions = await this.sessionService.getUserSessions(userId);
-      
-      return sessions.map(session => ({
+
+      return sessions.map((session) => ({
         id: session.sessionId,
         userId: session.userId,
         createdAt: session.createdAt,
@@ -142,9 +155,9 @@ export class SessionStrategyService implements IAuthStrategy {
           ip: session.deviceInfo.ip,
           deviceType: session.deviceInfo.deviceType,
           browser: session.deviceInfo.browser,
-          os: session.deviceInfo.os
+          os: session.deviceInfo.os,
         },
-        metadata: session.metadata
+        metadata: session.metadata,
       }));
     } catch (error) {
       return [];
@@ -159,10 +172,13 @@ export class SessionStrategyService implements IAuthStrategy {
    */
   async updateAllUserSessionsData(
     userId: number,
-    updateData: Partial<IUser>
+    updateData: Partial<IUser>,
   ): Promise<number> {
     try {
-      return await this.sessionService.updateAllUserSessionsData(userId, updateData);
+      return await this.sessionService.updateAllUserSessionsData(
+        userId,
+        updateData,
+      );
     } catch (error) {
       return 0;
     }
@@ -176,10 +192,13 @@ export class SessionStrategyService implements IAuthStrategy {
    */
   async updateUserSessionsFields(
     userId: number,
-    fieldUpdates: Record<string, any>
+    fieldUpdates: Record<string, any>,
   ): Promise<number> {
     try {
-      return await this.sessionService.updateUserSessionsFields(userId, fieldUpdates);
+      return await this.sessionService.updateUserSessionsFields(
+        userId,
+        fieldUpdates,
+      );
     } catch (error) {
       return 0;
     }
@@ -199,9 +218,15 @@ export class SessionStrategyService implements IAuthStrategy {
   /**
    * Invalidate other sessions (keep current one)
    */
-  async invalidateOtherSessions(userId: number, currentSessionId: string): Promise<number> {
+  async invalidateOtherSessions(
+    userId: number,
+    currentSessionId: string,
+  ): Promise<number> {
     try {
-      return await this.sessionService.invalidateOtherSessions(userId, currentSessionId);
+      return await this.sessionService.invalidateOtherSessions(
+        userId,
+        currentSessionId,
+      );
     } catch (error) {
       return 0;
     }
@@ -211,9 +236,9 @@ export class SessionStrategyService implements IAuthStrategy {
    * Handle password change session invalidation
    */
   async handlePasswordChange(
-    userId: number, 
-    policy: PasswordChangePolicy, 
-    currentSessionId?: string
+    userId: number,
+    policy: PasswordChangePolicy,
+    currentSessionId?: string,
   ): Promise<number> {
     try {
       // Map our policy to session service policy
@@ -235,27 +260,31 @@ export class SessionStrategyService implements IAuthStrategy {
       return await this.sessionService.handlePasswordChangeSessionInvalidation(
         userId,
         sessionPolicy,
-        currentSessionId
+        currentSessionId,
       );
     } catch (error) {
       return 0;
     }
   }
 
- 
-
   /**
    * Check if session strategy is available
    */
   isAvailable(): boolean {
-    return this.sessionService !== null && this.authOptions?.session?.secret !== undefined;
+    return (
+      this.sessionService !== null &&
+      this.authOptions?.session?.secret !== undefined
+    );
   }
 
   // Private utility methods
 
   private extractSessionId(request: Request): string | null {
     // Use the centralized utility function with configured session name
-    const sessionName = this.authOptions?.session?.name || process.env.SESSION_NAME || 'sessionId';
+    const sessionName =
+      this.authOptions?.session?.name ||
+      process.env.SESSION_NAME ||
+      'sessionId';
     return extractSessionId(request, sessionName);
   }
-} 
+}

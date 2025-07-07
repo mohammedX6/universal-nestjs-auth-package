@@ -14,9 +14,12 @@ export class AuthService {
   constructor(
     @Optional() private readonly jwtService?: JwtService,
     @Optional() @Inject('CACHE_MANAGER') private readonly cacheManager?: Cache,
-    @Optional() @Inject('AUTH_MODULE_OPTIONS') private readonly authOptions?: any,
+    @Optional()
+    @Inject('AUTH_MODULE_OPTIONS')
+    private readonly authOptions?: any,
   ) {
-    this.secretKey = this.authOptions?.jwt?.secret || process.env.JWT_SECRET_KEY;
+    this.secretKey =
+      this.authOptions?.jwt?.secret || process.env.JWT_SECRET_KEY;
   }
 
   /**
@@ -31,7 +34,7 @@ export class AuthService {
       if (this.jwtService) {
         return this.jwtService.sign(payload, options);
       }
-      
+
       // Fallback to direct jsonwebtoken usage
       return jwt.sign(payload, this.secretKey, options);
     } catch (error) {
@@ -50,7 +53,7 @@ export class AuthService {
       if (this.jwtService) {
         return this.jwtService.verify(token);
       }
-      
+
       // Fallback to direct jsonwebtoken usage
       return jwt.verify(token, this.secretKey);
     } catch (error) {
@@ -86,11 +89,18 @@ export class AuthService {
     try {
       // Get token expiration time for TTL
       const decoded = this.decode(token);
-      const expirationTime = decoded?.exp ? decoded.exp * 1000 : Date.now() + 24 * 60 * 60 * 1000;
-      const calculatedTtl = ttl || Math.max(0, Math.floor((expirationTime - Date.now()) / 1000));
+      const expirationTime = decoded?.exp
+        ? decoded.exp * 1000
+        : Date.now() + 24 * 60 * 60 * 1000;
+      const calculatedTtl =
+        ttl || Math.max(0, Math.floor((expirationTime - Date.now()) / 1000));
 
       // Store revoked token in Redis with TTL
-      await this.cacheManager.set(`revoked_token:${token}`, true, calculatedTtl);
+      await this.cacheManager.set(
+        `revoked_token:${token}`,
+        true,
+        calculatedTtl,
+      );
       return true;
     } catch (error) {
       console.error('Failed to revoke token:', error);
@@ -146,7 +156,10 @@ export class AuthService {
    * @param payload - Token payload
    * @returns Object containing access and refresh tokens
    */
-  generateTokenPair(payload: any): { accessToken: string; refreshToken: string } {
+  generateTokenPair(payload: any): {
+    accessToken: string;
+    refreshToken: string;
+  } {
     return {
       accessToken: this.generateAccessToken(payload),
       refreshToken: this.generateRefreshToken(payload),

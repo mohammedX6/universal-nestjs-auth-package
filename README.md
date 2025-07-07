@@ -1,20 +1,23 @@
 # Universal NestJS Auth Package
 
-A comprehensive authentication package for NestJS applications providing **JWT** and **Session-based** authentication with a **unified interface**. Uses strategy pattern for clean architecture and Redis-only session storage.
+[![npm version](https://badge.fury.io/js/universal-nestjs-auth-package.svg)](https://badge.fury.io/js/universal-nestjs-auth-package)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A comprehensive authentication package for NestJS applications providing **JWT** and **Session-based** authentication with a **unified interface**. Built with the latest NestJS 11.x, Redis 5.x, and TypeScript 5.x. Uses strategy pattern for clean architecture and Redis-only session storage.
 
 ## 🚀 Key Features
 
 - **Unified Interface**: Single service for both JWT and session authentication
 - **Strategy Pattern**: Clean architecture with IAuthStrategy interface
 - **Auto-Detection**: Automatically detects authentication method from requests
-- **Redis-Only Sessions**: Simple Redis-only session storage (no memory fallback)
-- **IUser Interface**: Consistent user data structure across all auth methods
 - **Multi-Device Sessions**: Track and manage sessions across devices
 - **Token Revocation**: Secure JWT token invalidation with Redis
 - **Device Fingerprinting**: Enhanced security through device tracking
 - **Configurable Naming**: Customize session and cookie names for your application
 - **Environment Variables**: Support for both configuration and environment-based setup
 - **TypeScript**: Full type safety and IntelliSense support
+- **Modern Dependencies**: Updated to latest NestJS 11.x, Redis 5.x, and TypeScript 5.x
+- **ESLint Ready**: Clean, linted codebase with modern ESLint v9 configuration
 
 ## 📦 Installation
 
@@ -281,93 +284,61 @@ AuthModule.forRoot({
 })
 ```
 
-### Google OAuth Integration
-```typescript
-AuthModule.forRoot({
-  strategy: 'hybrid',
-  jwt: { secret: 'jwt-secret' },
-  session: { secret: 'session-secret' },
-  google: {
-    clientId: 'your-google-client-id',
-    clientSecret: 'your-google-client-secret',
-    callbackURL: 'http://localhost:3000/auth/google/callback',
-  },
-})
+
+
+## 🔧 Requirements
+
+- **Node.js**: 16.x or higher
+- **NestJS**: 11.x or higher
+- **Redis**: 4.x or 5.x
+- **TypeScript**: 5.x
+
+## 🛠️ Development
+
+### Building the Package
+```bash
+npm run build
 ```
 
-## 🔄 Migration from Domain-Specific Packages
-
-If you're migrating from a domain-specific auth package:
-
-1. **Update imports**: Change package name in imports
-2. **Update user interface**: The `IUser` interface includes flexible fields that can be adapted:
-   - `organizationId` (was `campaignId`) - use for any organization/project identifier
-   - `organizationCreator` (was `campaignCreator`) - use for any creator/admin flag
-3. **Environment variables**: Set `APP_NAME` and `SESSION_PREFIX` to match your application
-
-## 📝 User Interface
-
-The `IUser` interface is designed to be flexible:
-
-```typescript
-interface IUser {
-  // Core user fields
-  userId?: number;
-  email?: string;
-  userName?: string;
-  name?: string;
-  
-  // Domain-specific fields (adapt for your use case)
-  organizationId?: number;    // e.g., companyId, projectId, campaignId
-  organizationCreator?: number; // e.g., isAdmin, isCreator
-  userTypeId?: number;
-  
-  // Permission and access control
-  permissions?: Array<number>;
-  userApps?: Array<number>;
-  committees?: Array<number>;
-  
-  // Additional fields as needed
-  [key: string]: any;
-}
+### Linting
+```bash
+npm run lint
 ```
 
-## 🧪 Testing
-
-```typescript
-describe('Authentication', () => {
-  let unifiedAuth: UnifiedAuthService;
-  
-  beforeEach(async () => {
-    const module = await Test.createTestingModule({
-      imports: [
-        AuthModule.forRoot({
-          strategy: 'jwt',
-          jwt: { secret: 'test-secret' },
-          redis: { host: 'localhost', port: 6379 },
-        }),
-      ],
-    }).compile();
-    
-    unifiedAuth = module.get<UnifiedAuthService>(UnifiedAuthService);
-  });
-  
-  it('should authenticate user', async () => {
-    const result = await unifiedAuth.login({
-      userData: { userId: 1, email: 'test@example.com' },
-      authMethod: 'jwt',
-    }, mockRequest);
-    
-    expect(result.authenticated).toBe(true);
-    expect(result.user.userId).toBe(1);
-  });
-});
+### Code Formatting
+```bash
+npm run format
 ```
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+**Redis Connection Issues**
+```bash
+# Ensure Redis is running
+redis-cli ping
+# Should return: PONG
+```
+
+**TypeScript Errors**
+- Ensure your `tsconfig.json` includes the package types
+- Check that you're using compatible NestJS and TypeScript versions
+
+**Session Not Working**
+- Verify Redis connection and configuration
+- Check that session cookies are being set correctly
+- Ensure your Redis database is accessible
+
+**JWT Token Issues**
+- Verify JWT secret is set correctly
+- Check token expiration settings
+- Ensure Redis is available for token revocation
 
 ## 🤝 Support
 
 For issues and questions:
-- Check the [GitHub Issues](https://github.com/your-repo/issues)
+- Check the [GitHub Issues](https://github.com/mohammedX6/universal-nestjs-auth-package/issues)
 - Review the examples in this README
 - Ensure Redis is running and accessible
 - Verify your configuration matches the examples

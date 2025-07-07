@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, Inject, Optional } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  Inject,
+  Optional,
+} from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { AuthService } from '../services/jwt/auth.service';
@@ -9,7 +14,7 @@ import { Cache } from '@nestjs/cache-manager';
  * Enhanced JWT Strategy with Redis-based token revocation
  * This strategy validates tokens and checks if they are revoked using Redis cache
  * Can be used across all microservices without requiring user repositories
- * 
+ *
  * Token revocation is handled by storing revoked tokens directly in Redis with TTL
  */
 @Injectable()
@@ -17,15 +22,18 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor(
     private readonly authService: AuthService,
     @Optional() @Inject('CACHE_MANAGER') private readonly cacheManager?: Cache,
-    @Optional() @Inject('AUTH_MODULE_OPTIONS') private readonly authOptions?: any,
+    @Optional()
+    @Inject('AUTH_MODULE_OPTIONS')
+    private readonly authOptions?: any,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         // Primary: Extract from cookies for browser clients using configured cookie name
         (request: Request) => {
           let token = null;
-          if (request && request.cookies) {
-            const accessTokenCookieName = authOptions?.cookies?.names?.accessToken || 'access-token';
+          if (request?.cookies) {
+            const accessTokenCookieName =
+              authOptions?.cookies?.names?.accessToken || 'access-token';
             token = request.cookies[accessTokenCookieName];
           }
           return token;
@@ -50,11 +58,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     try {
       // Extract the raw token from request using configured cookie name
       let token = null;
-      if (request && request.cookies) {
-        const accessTokenCookieName = this.authOptions?.cookies?.names?.accessToken || 'access-token';
+      if (request?.cookies) {
+        const accessTokenCookieName =
+          this.authOptions?.cookies?.names?.accessToken || 'access-token';
         token = request.cookies[accessTokenCookieName];
       }
-      
+
       if (!token) {
         // Extract from Authorization header
         const authHeader = request.headers.authorization;
@@ -70,8 +79,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       // Check if token is revoked using Redis - store token directly
       if (this.cacheManager) {
         try {
-          const isRevoked = await this.cacheManager.get(`revoked_token:${token}`);
-          
+          const isRevoked = await this.cacheManager.get(
+            `revoked_token:${token}`,
+          );
+
           if (isRevoked) {
             throw new UnauthorizedException('Token has been revoked');
           }
@@ -86,13 +97,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       }
 
       // Validate payload structure
-      if (!payload || !payload.sub) {
+      if (!payload?.sub) {
         throw new UnauthorizedException('Invalid token payload');
       }
 
       // Token is valid and not revoked
       return payload;
-
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
@@ -108,4 +118,4 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   isCacheAvailable(): boolean {
     return !!this.cacheManager;
   }
-} 
+}

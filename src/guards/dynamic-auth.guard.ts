@@ -1,4 +1,10 @@
-import { Injectable, CanActivate, ExecutionContext, Inject, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  Inject,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { AuthModuleOptions } from '../modules/auth.module';
@@ -17,39 +23,43 @@ export class DynamicAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    
+
     // Determine which authentication method to use based on request
     const authMethod = this.detectAuthMethod(request);
-    
+
     let guard: CanActivate;
-    
+
     try {
       switch (authMethod) {
         case 'jwt':
           if (this.authOptions.strategy === 'session') {
-            throw new UnauthorizedException('JWT authentication not supported in session-only mode');
+            throw new UnauthorizedException(
+              'JWT authentication not supported in session-only mode',
+            );
           }
           guard = new (AuthGuard('jwt'))();
           break;
-          
+
         case 'session':
           if (this.authOptions.strategy === 'jwt') {
-            throw new UnauthorizedException('Session authentication not supported in JWT-only mode');
+            throw new UnauthorizedException(
+              'Session authentication not supported in JWT-only mode',
+            );
           }
           guard = new (AuthGuard('session'))();
           break;
-          
+
         default:
           // Auto-detect mode - use the most appropriate strategy
           guard = this.createAutoDetectGuard(request);
           break;
       }
-      
-      return await guard.canActivate(context) as boolean;
+
+      return (await guard.canActivate(context)) as boolean;
     } catch (error) {
       // In hybrid mode, try the fallback strategy if the primary fails
       if (this.authOptions.strategy === 'hybrid' && authMethod === 'auto') {
-        return await this.tryFallbackAuth(context, request);
+        return this.tryFallbackAuth(context, request);
       }
       throw error;
     }
@@ -69,7 +79,7 @@ export class DynamicAuthGuard implements CanActivate {
       // Hybrid mode - prefer session if available, fallback to JWT
       const hasSession = this.hasSessionData(request);
       const hasJwt = this.hasJwtData(request);
-      
+
       if (hasSession && hasJwt) {
         // If both are present, prefer session
         return new (AuthGuard('session'))();
@@ -90,18 +100,23 @@ export class DynamicAuthGuard implements CanActivate {
    * @param request - HTTP request
    * @returns Authentication result
    */
-  private async tryFallbackAuth(context: ExecutionContext, request: Request): Promise<boolean> {
+  private async tryFallbackAuth(
+    context: ExecutionContext,
+    request: Request,
+  ): Promise<boolean> {
     try {
       // Try the opposite strategy
       const hasSession = this.hasSessionData(request);
-      const fallbackGuard = hasSession 
-        ? new (AuthGuard('jwt'))() 
+      const fallbackGuard = hasSession
+        ? new (AuthGuard('jwt'))()
         : new (AuthGuard('session'))();
-      
-      return await fallbackGuard.canActivate(context) as boolean;
+
+      return (await fallbackGuard.canActivate(context)) as boolean;
     } catch (fallbackError) {
       // Both strategies failed
-      throw new UnauthorizedException('Authentication failed with all available strategies');
+      throw new UnauthorizedException(
+        'Authentication failed with all available strategies',
+      );
     }
   }
 
@@ -116,19 +131,20 @@ export class DynamicAuthGuard implements CanActivate {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       return 'jwt';
     }
-    
+
     // Check for JWT token in cookies using configured cookie name
-    const accessTokenCookieName = this.authOptions?.cookies?.names?.accessToken || 'access-token';
+    const accessTokenCookieName =
+      this.authOptions?.cookies?.names?.accessToken || 'access-token';
     const jwtCookie = request.cookies?.[accessTokenCookieName];
     if (jwtCookie) {
       return 'jwt';
     }
-    
+
     // Check for session data
     if (this.hasSessionData(request)) {
       return 'session';
     }
-    
+
     return 'auto';
   }
 
@@ -143,14 +159,15 @@ export class DynamicAuthGuard implements CanActivate {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       return true;
     }
-    
+
     // Check JWT cookie using configured cookie name
-    const accessTokenCookieName = this.authOptions?.cookies?.names?.accessToken || 'access-token';
+    const accessTokenCookieName =
+      this.authOptions?.cookies?.names?.accessToken || 'access-token';
     const jwtCookie = request.cookies?.[accessTokenCookieName];
     if (jwtCookie) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -162,23 +179,25 @@ export class DynamicAuthGuard implements CanActivate {
   private hasSessionData(request: Request): boolean {
     // Check for session cookie
     // Use session name exactly as configured, from environment, or default
-    const sessionName = this.authOptions.session?.name || process.env.SESSION_NAME || 'sessionId';
+    const sessionName =
+      this.authOptions.session?.name || process.env.SESSION_NAME || 'sessionId';
     const sessionCookie = request.cookies?.[sessionName];
     if (sessionCookie) {
       return true;
     }
-    
+
     // Check for session ID in headers
     const sessionHeader = request.headers['x-session-id'];
     if (sessionHeader) {
       return true;
     }
-    
+
     // Check for session data in request (if session middleware is active)
-    if (request.session && (request.session as any).userId) {
+    // Note: Express session middleware would add session property to request
+    if ((request as any).session?.userId) {
       return true;
     }
-    
+
     return false;
   }
 }
@@ -211,7 +230,7 @@ export class JwtOnlyGuard extends AuthGuard('jwt') {
     private readonly authOptions: AuthModuleOptions,
   ) {
     super();
-    
+
     if (this.authOptions.strategy === 'session') {
       throw new Error('JWT guard cannot be used in session-only mode');
     }
@@ -219,7 +238,7 @@ export class JwtOnlyGuard extends AuthGuard('jwt') {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
-      return await super.canActivate(context) as boolean;
+      return (await super.canActivate(context)) as boolean;
     } catch (error) {
       throw new UnauthorizedException('JWT authentication failed');
     }
@@ -233,7 +252,7 @@ export class SessionOnlyGuard extends AuthGuard('session') {
     private readonly authOptions: AuthModuleOptions,
   ) {
     super();
-    
+
     if (this.authOptions.strategy === 'jwt') {
       throw new Error('Session guard cannot be used in JWT-only mode');
     }
@@ -241,9 +260,9 @@ export class SessionOnlyGuard extends AuthGuard('session') {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     try {
-      return await super.canActivate(context) as boolean;
+      return (await super.canActivate(context)) as boolean;
     } catch (error) {
       throw new UnauthorizedException('Session authentication failed');
     }
   }
-} 
+}

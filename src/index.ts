@@ -34,7 +34,7 @@ export type {
   CookieConfig,
   GoogleOAuthConfig,
   ValidationResult,
-  ConfigValidation
+  ConfigValidation,
 } from './types/auth.types';
 
 // Exception Handling - Professional error management
@@ -47,4 +47,4 @@ export * from './utils/index';
 export * from './config/default.config';
 
 // Legacy JWT Service - Only for backward compatibility, use UnifiedAuthService instead
-export * from './services/jwt/auth.service'; 
+export * from './services/jwt/auth.service';

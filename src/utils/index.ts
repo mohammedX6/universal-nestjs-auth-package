@@ -17,7 +17,7 @@ export function extractSessionId(
 ): string | null {
   // Use session name exactly as provided
   // Check cookies first
-  if (request.cookies && request.cookies[sessionName]) {
+  if (request.cookies?.[sessionName]) {
     return request.cookies[sessionName];
   }
 
@@ -103,12 +103,12 @@ export function extractJwtTokenFromRequest(
   let token: string | null = null;
 
   // Primary: Extract from cookies for browser clients using configured name
-  if (request.cookies && request.cookies[accessTokenCookieName]) {
+  if (request.cookies?.[accessTokenCookieName]) {
     token = request.cookies[accessTokenCookieName];
   } else {
     // Secondary: Fallback to Bearer header extraction for API clients
     const authHeader = request.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader?.startsWith('Bearer ')) {
       token = authHeader.substring(7); // Remove 'Bearer ' prefix
     }
   }
@@ -119,7 +119,7 @@ export function extractJwtTokenFromRequest(
 /**
  * Generate a cryptographically secure session ID
  * Uses Node.js crypto.randomBytes for maximum security
- * 
+ *
  * @param length - Length in bytes for the session ID (default: 32 bytes = 256 bits)
  * @returns A URL-safe, cryptographically secure session ID
  */
@@ -127,16 +127,13 @@ export function generateSecureSessionId(length: number = 32): string {
   // Generate cryptographically secure random bytes
   // Default: 32 bytes = 256 bits of entropy (extremely secure)
   const randomBuffer = randomBytes(length);
-  
+
   // Convert to URL-safe base64 string
   const sessionId = randomBuffer
     .toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=/g, '');
-  
+
   return sessionId;
 }
-
-
-

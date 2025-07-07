@@ -54,4 +54,4 @@ export const GetUserData = createParamDecorator(
     const userData = request.user || request.userSession?.userData;
     return field ? userData?.[field] : userData;
   },
-); 
+);

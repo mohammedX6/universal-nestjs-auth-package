@@ -1,9 +1,12 @@
 import { Injectable, Inject, Optional } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { UnifiedAuthService } from './unified-auth.service';
-import { UnifiedAuthInput, UnifiedAuthResult, IUser } from '../interfaces/user.interface';
+import {
+  UnifiedAuthInput,
+  UnifiedAuthResult,
+  IUser,
+} from '../interfaces/user.interface';
 import { AuthModuleOptions } from '../modules/auth.module';
-
 
 @Injectable()
 export class AuthHelperService {
@@ -22,17 +25,19 @@ export class AuthHelperService {
   };
 
   private readonly defaultRememberMeConfig = {
-    jwtMaxAge: 30 * 24 * 60 * 60 * 1000,        // 30 days
-    refreshMaxAge: 30 * 24 * 60 * 60 * 1000,    // 30 days
-    jwtRegularMaxAge: 60 * 60 * 1000,            // 1 hour
+    jwtMaxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    refreshMaxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    jwtRegularMaxAge: 60 * 60 * 1000, // 1 hour
     // Session timing now uses session.maxAge as base - no defaults here
-    sessionMaxAge: undefined,                    // Use session.maxAge or fallback to 24 hours
-    sessionRegularMaxAge: undefined,             // Use session.maxAge or fallback to 24 hours
+    sessionMaxAge: undefined, // Use session.maxAge or fallback to 24 hours
+    sessionRegularMaxAge: undefined, // Use session.maxAge or fallback to 24 hours
   };
 
   constructor(
     private readonly unifiedAuthService: UnifiedAuthService,
-    @Optional() @Inject('AUTH_MODULE_OPTIONS') private readonly authOptions?: AuthModuleOptions,
+    @Optional()
+    @Inject('AUTH_MODULE_OPTIONS')
+    private readonly authOptions?: AuthModuleOptions,
   ) {}
 
   /**
@@ -41,10 +46,17 @@ export class AuthHelperService {
    */
   private getCookieNames() {
     return {
-      accessToken: this.authOptions?.cookies?.names?.accessToken || this.defaultCookieNames.accessToken,
-      refreshToken: this.authOptions?.cookies?.names?.refreshToken || this.defaultCookieNames.refreshToken,
+      accessToken:
+        this.authOptions?.cookies?.names?.accessToken ||
+        this.defaultCookieNames.accessToken,
+      refreshToken:
+        this.authOptions?.cookies?.names?.refreshToken ||
+        this.defaultCookieNames.refreshToken,
       // Use session name from session config only
-      sessionId: this.authOptions?.session?.name || process.env.SESSION_NAME || 'sessionId',
+      sessionId:
+        this.authOptions?.session?.name ||
+        process.env.SESSION_NAME ||
+        'sessionId',
     };
   }
 
@@ -54,11 +66,21 @@ export class AuthHelperService {
    */
   private getCookieOptions() {
     return {
-      httpOnly: this.authOptions?.cookies?.options?.httpOnly ?? this.defaultCookieOptions.httpOnly,
-      secure: this.authOptions?.cookies?.options?.secure ?? this.defaultCookieOptions.secure,
-      sameSite: this.authOptions?.cookies?.options?.sameSite || this.defaultCookieOptions.sameSite,
-      path: this.authOptions?.cookies?.options?.path || this.defaultCookieOptions.path,
-      ...(this.authOptions?.cookies?.options?.domain && { domain: this.authOptions.cookies.options.domain }),
+      httpOnly:
+        this.authOptions?.cookies?.options?.httpOnly ??
+        this.defaultCookieOptions.httpOnly,
+      secure:
+        this.authOptions?.cookies?.options?.secure ??
+        this.defaultCookieOptions.secure,
+      sameSite:
+        this.authOptions?.cookies?.options?.sameSite ||
+        this.defaultCookieOptions.sameSite,
+      path:
+        this.authOptions?.cookies?.options?.path ||
+        this.defaultCookieOptions.path,
+      ...(this.authOptions?.cookies?.options?.domain && {
+        domain: this.authOptions.cookies.options.domain,
+      }),
     };
   }
 
@@ -69,9 +91,15 @@ export class AuthHelperService {
    */
   private getRememberMeConfig() {
     return {
-      jwtMaxAge: this.authOptions?.cookies?.rememberMe?.jwtMaxAge || this.defaultRememberMeConfig.jwtMaxAge,
-      refreshMaxAge: this.authOptions?.cookies?.rememberMe?.refreshMaxAge || this.defaultRememberMeConfig.refreshMaxAge,
-      jwtRegularMaxAge: this.authOptions?.cookies?.rememberMe?.jwtRegularMaxAge || this.defaultRememberMeConfig.jwtRegularMaxAge,
+      jwtMaxAge:
+        this.authOptions?.cookies?.rememberMe?.jwtMaxAge ||
+        this.defaultRememberMeConfig.jwtMaxAge,
+      refreshMaxAge:
+        this.authOptions?.cookies?.rememberMe?.refreshMaxAge ||
+        this.defaultRememberMeConfig.refreshMaxAge,
+      jwtRegularMaxAge:
+        this.authOptions?.cookies?.rememberMe?.jwtRegularMaxAge ||
+        this.defaultRememberMeConfig.jwtRegularMaxAge,
       // Session timing is now handled in session configuration only
     };
   }
@@ -88,21 +116,23 @@ export class AuthHelperService {
   async authenticateUser(
     userData: IUser,
     request: Request,
-    rememberMe: boolean = false
+    rememberMe: boolean = false,
   ): Promise<UnifiedAuthResult> {
     try {
       // Extract request metadata
       const userAgent = request?.headers?.['user-agent'] || 'unknown';
-      const clientIp = request?.ip || request?.connection?.remoteAddress || 'unknown';
+      const clientIp =
+        request?.ip || request?.connection?.remoteAddress || 'unknown';
       const requestTime = new Date();
 
       // Calculate expiration times based on rememberMe flag and configuration
-      const jwtExpiration = rememberMe 
+      const jwtExpiration = rememberMe
         ? this.authOptions?.jwt?.refreshExpiresIn || '30d'
         : this.authOptions?.jwt?.expiresIn || '1h';
-      
+
       // Use session.maxAge directly (session timing is configured in session section only)
-      const sessionMaxAge = this.authOptions?.session?.maxAge || 24 * 60 * 60 * 1000; // 24 hours default
+      const sessionMaxAge =
+        this.authOptions?.session?.maxAge || 24 * 60 * 60 * 1000; // 24 hours default
 
       // Create unified auth input
       const authInput: UnifiedAuthInput = {
@@ -113,15 +143,18 @@ export class AuthHelperService {
           maxAge: sessionMaxAge,
           metadata: {
             loginTime: requestTime,
-            userAgent: userAgent,
+            userAgent,
             ipAddress: clientIp,
-            rememberMe: rememberMe,
+            rememberMe,
           },
         },
       };
 
       // Use unified auth service to create authentication
-      const authResult = await this.unifiedAuthService.login(authInput, request);
+      const authResult = await this.unifiedAuthService.login(
+        authInput,
+        request,
+      );
 
       return authResult;
     } catch (error) {
@@ -136,7 +169,11 @@ export class AuthHelperService {
    * @param authResult - Authentication result from unified service
    * @param rememberMe - Whether to extend cookie expiration
    */
-  setAuthCookies(response: Response, authResult: UnifiedAuthResult, rememberMe: boolean = false): void {
+  setAuthCookies(
+    response: Response,
+    authResult: UnifiedAuthResult,
+    rememberMe: boolean = false,
+  ): void {
     // Get configuration values
     const cookieNames = this.getCookieNames();
     const cookieOptions = this.getCookieOptions();
@@ -148,11 +185,11 @@ export class AuthHelperService {
       ? this.authOptions?.session?.maxAgeRememberMe || 7 * 24 * 60 * 60 * 1000 // 7 days default
       : this.authOptions?.session?.maxAge || 24 * 60 * 60 * 1000; // 24 hours default
 
-    const jwtMaxAge = rememberMe 
+    const jwtMaxAge = rememberMe
       ? rememberMeConfig.jwtMaxAge
       : rememberMeConfig.jwtRegularMaxAge;
 
-    const refreshMaxAge = rememberMe 
+    const refreshMaxAge = rememberMe
       ? rememberMeConfig.refreshMaxAge
       : rememberMeConfig.refreshMaxAge; // Refresh tokens typically always have longer expiration
 
@@ -187,7 +224,7 @@ export class AuthHelperService {
   clearAuthCookies(response: Response): void {
     // Get configured cookie names
     const cookieNames = this.getCookieNames();
-    
+
     // Clear all authentication cookies using configured names
     response.clearCookie(cookieNames.accessToken);
     response.clearCookie(cookieNames.refreshToken);
@@ -203,9 +240,9 @@ export class AuthHelperService {
    * @returns Logout result
    */
   async terminateAuth(
-    request: Request, 
-    response: Response, 
-    userId?: number
+    request: Request,
+    response: Response,
+    userId?: number,
   ): Promise<{ success: boolean; methods: string[]; message: string }> {
     try {
       // Use unified auth service for logout
@@ -235,7 +272,6 @@ export class AuthHelperService {
     }
   }
 
-
   /**
    * Refresh authentication tokens/session
    * @param request - HTTP request object
@@ -244,13 +280,13 @@ export class AuthHelperService {
    * @returns Refreshed authentication result
    */
   async refreshAuthTokens(
-    request: Request, 
-    response: Response, 
-    rememberMe: boolean = false
+    request: Request,
+    response: Response,
+    rememberMe: boolean = false,
   ): Promise<UnifiedAuthResult | null> {
     try {
       const refreshResult = await this.unifiedAuthService.refresh(request);
-      
+
       if (refreshResult) {
         // Update cookies with new tokens/session info
         this.setAuthCookies(response, refreshResult, rememberMe);
@@ -269,7 +305,7 @@ export class AuthHelperService {
    * @returns Array of session information
    */
   async getActiveSessions(userId: number, strategyType?: 'jwt' | 'session') {
-    return await this.unifiedAuthService.getUserSessions(userId, strategyType);
+    return this.unifiedAuthService.getUserSessions(userId, strategyType);
   }
 
   /**
@@ -279,7 +315,10 @@ export class AuthHelperService {
    * @returns Number of revoked sessions
    */
   async revokeAllSessions(userId: number, strategyType?: 'jwt' | 'session') {
-    return await this.unifiedAuthService.invalidateAllUserSessions(userId, strategyType);
+    return this.unifiedAuthService.invalidateAllUserSessions(
+      userId,
+      strategyType,
+    );
   }
 
   /**
@@ -291,9 +330,12 @@ export class AuthHelperService {
    */
   async updateUserSessionsData(
     userId: number,
-    updateData: Partial<IUser>
+    updateData: Partial<IUser>,
   ): Promise<number> {
-    return await this.unifiedAuthService.updateAllUserSessionsData(userId, updateData);
+    return this.unifiedAuthService.updateAllUserSessionsData(
+      userId,
+      updateData,
+    );
   }
 
   /**
@@ -305,9 +347,12 @@ export class AuthHelperService {
    */
   async updateUserSessionsFields(
     userId: number,
-    fieldUpdates: Record<string, any>
+    fieldUpdates: Record<string, any>,
   ): Promise<number> {
-    return await this.unifiedAuthService.updateUserSessionsFields(userId, fieldUpdates);
+    return this.unifiedAuthService.updateUserSessionsFields(
+      userId,
+      fieldUpdates,
+    );
   }
 
   /**
@@ -332,4 +377,4 @@ export class AuthHelperService {
       isServiceAvailable: this.isServiceAvailable(),
     };
   }
-} 
+}
