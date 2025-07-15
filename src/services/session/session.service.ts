@@ -309,7 +309,7 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
       return {
         isValid: false,
         status: 'invalid',
-        error: 'Session validation failed',
+        error: error.message || 'Session validation failed',
       };
     }
   }

@@ -56,7 +56,9 @@ export class SessionStrategy extends PassportStrategy(Strategy, 'session') {
       // Return user data for further processing
       return validation.user;
     } catch (error) {
-      throw new UnauthorizedException('Session validation failed');
+      throw new UnauthorizedException(
+        error.message || 'Session validation failed',
+      );
     }
   }
 
