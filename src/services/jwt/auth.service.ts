@@ -12,14 +12,27 @@ export class AuthService {
   private readonly secretKey: string;
 
   constructor(
-    @Optional() private readonly jwtService?: JwtService,
     @Optional() @Inject('CACHE_MANAGER') private readonly cacheManager?: Cache,
     @Optional()
     @Inject('AUTH_MODULE_OPTIONS')
     private readonly authOptions?: any,
   ) {
+    // Ensure we always have a secret key with proper fallback chain
     this.secretKey =
-      this.authOptions?.jwt?.secret || process.env.JWT_SECRET_KEY;
+      this.authOptions?.jwt?.secret ||
+      process.env.JWT_SECRET_KEY ||
+      'sawtak-jwt-secret'; // Use consistent fallback with config
+
+    // Warn if using fallback secret in production
+    if (
+      !this.authOptions?.jwt?.secret &&
+      !process.env.JWT_SECRET_KEY &&
+      process.env.NODE_ENV === 'production'
+    ) {
+      console.warn(
+        '⚠️  WARNING: Using default JWT secret in production. Please set JWT_SECRET_KEY environment variable.',
+      );
+    }
   }
 
   /**
@@ -30,11 +43,6 @@ export class AuthService {
    */
   sign(payload: any, options: JwtSignOptions = {}): string {
     try {
-      // Use NestJS JWT service if available
-      if (this.jwtService) {
-        return this.jwtService.sign(payload, options);
-      }
-
       // Fallback to direct jsonwebtoken usage
       return jwt.sign(payload, this.secretKey, options);
     } catch (error) {
@@ -49,11 +57,6 @@ export class AuthService {
    */
   verify(token: string): any {
     try {
-      // Use NestJS JWT service if available
-      if (this.jwtService) {
-        return this.jwtService.verify(token);
-      }
-
       // Fallback to direct jsonwebtoken usage
       return jwt.verify(token, this.secretKey);
     } catch (error) {

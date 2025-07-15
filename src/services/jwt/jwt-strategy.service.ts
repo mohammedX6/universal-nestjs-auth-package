@@ -39,13 +39,13 @@ export class JwtStrategyService implements IAuthStrategy {
     request: Request,
   ): Promise<UnifiedAuthResult> {
     try {
+      this.deviceDetectionService.extractDeviceInfo(
+        request.headers['user-agent'] || '',
+        getClientIp(request),
+      );
+
       const payload = {
         ...input.userData,
-        // Add device info to token for tracking
-        deviceInfo: this.deviceDetectionService.extractDeviceInfo(
-          request.headers['user-agent'] || '',
-          getClientIp(request),
-        ),
       };
 
       const token = this.authService.generateAccessToken(payload);

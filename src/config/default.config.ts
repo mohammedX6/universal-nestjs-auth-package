@@ -116,6 +116,7 @@ export function getDefaultAuthConfig() {
     strategy: 'session' as const,
     session: getDefaultSessionConfig(),
     jwt: {
+      secret: process.env.JWT_SECRET_KEY || 'sawtak-jwt-secret', // Add default JWT secret
       expiresIn: accessTokenExpiration(),
       refreshExpiresIn: refreshTokenExpiration(),
     },

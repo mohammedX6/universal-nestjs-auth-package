@@ -41,7 +41,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         // Secondary: Fallback to Bearer header extraction for API clients
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
-      secretOrKey: authOptions?.jwt?.secret || process.env.JWT_SECRET_KEY,
+      secretOrKey:
+        authOptions?.jwt?.secret ||
+        process.env.JWT_SECRET_KEY ||
+        'sawtak-jwt-secret',
       // Pass the request to validate method so we can access the raw token
       passReqToCallback: true,
     });
@@ -94,11 +97,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
           // Log cache errors but don't fail validation
           console.error('Error checking token revocation in Redis:', error);
         }
-      }
-
-      // Validate payload structure
-      if (!payload?.sub) {
-        throw new UnauthorizedException('Invalid token payload');
       }
 
       // Token is valid and not revoked
