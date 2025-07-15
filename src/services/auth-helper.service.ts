@@ -117,6 +117,7 @@ export class AuthHelperService {
     userData: IUser,
     request: Request,
     rememberMe: boolean = false,
+    authMethod?: 'jwt' | 'session',
   ): Promise<UnifiedAuthResult> {
     try {
       // Extract request metadata
@@ -137,7 +138,7 @@ export class AuthHelperService {
       // Create unified auth input
       const authInput: UnifiedAuthInput = {
         userData,
-        authMethod: 'auto', // Let unified service decide based on configuration
+        authMethod: authMethod || 'auto', // Let unified service decide based on configuration
         options: {
           expiresIn: jwtExpiration,
           maxAge: sessionMaxAge,

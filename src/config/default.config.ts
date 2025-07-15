@@ -22,7 +22,7 @@ export function accessTokenExpiration(): string {
 export function sessionExpiration(): number {
   const sessionExpiration = process.env.SESSION_EXPIRATION;
 
-  const defaultSessionExpiration = 6 * 60 * 60 * 1000;
+  const defaultSessionExpiration = 1 * 60 * 60 * 1000;
 
   if (!sessionExpiration) {
     return defaultSessionExpiration;
