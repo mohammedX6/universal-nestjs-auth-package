@@ -75,8 +75,6 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
           ? this.sessionOptions?.redis?.db
           : parseInt(process.env.REDIS_SESSION_DB || '0'),
       keyPrefix: this.getSessionKeyPrefix(),
-      // Redis TTL in seconds (Redis expects seconds)
-      ttl: Math.floor(this.config.sessionTimeoutMs / 1000),
     };
 
     this.logger.log('SessionService initialized with configuration:', {
@@ -580,13 +578,20 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Store session in Redis with error handling
+   * TTL is set per-session based on the session's actual expiresAt value.
+   * This ensures correct expiration for maxAge, remember me, etc.
    */
   private async storeSession(session: UserSession): Promise<boolean> {
     return (
       (await this.executeRedisOperation(async () => {
+        // Calculate TTL in seconds based on session's expiresAt
+        const ttlSeconds = Math.max(
+          1,
+          Math.floor((session.expiresAt.getTime() - Date.now()) / 1000),
+        );
         await this.redisClient!.setEx(
           this.getSessionKey(session.sessionId),
-          Math.floor((session.expiresAt.getTime() - Date.now()) / 1000),
+          ttlSeconds,
           JSON.stringify(session),
         );
         return true;
