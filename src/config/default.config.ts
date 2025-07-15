@@ -22,7 +22,7 @@ export function accessTokenExpiration(): string {
 export function sessionExpiration(): number {
   const sessionExpiration = process.env.SESSION_EXPIRATION;
 
-  const defaultSessionExpiration = 2 * 24 * 60 * 60 * 1000;
+  const defaultSessionExpiration = 6 * 60 * 60 * 1000;
 
   if (!sessionExpiration) {
     return defaultSessionExpiration;
@@ -35,6 +35,31 @@ export function sessionExpiration(): number {
   }
 
   return parsedSessionExpiration;
+}
+
+export function sessionRememberMeExpiration(): number {
+  const sessionRememberMeExpiration =
+    process.env.SESSION_REMEMBER_ME_EXPIRATION;
+
+  const defaultSessionRememberMeExpiration = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+
+  if (!sessionRememberMeExpiration) {
+    return defaultSessionRememberMeExpiration;
+  }
+
+  const parsedSessionRememberMeExpiration = parseInt(
+    sessionRememberMeExpiration,
+    10,
+  );
+
+  if (
+    isNaN(parsedSessionRememberMeExpiration) ||
+    parsedSessionRememberMeExpiration <= 0
+  ) {
+    return defaultSessionRememberMeExpiration;
+  }
+
+  return parsedSessionRememberMeExpiration;
 }
 
 export function refreshTokenExpiration(): string {
@@ -77,7 +102,7 @@ export function getDefaultSessionConfig() {
     },
     name: process.env.SESSION_NAME || 'sawtak-session-id',
     maxAge: sessionExpiration(),
-    maxAgeRememberMe: 2 * 24 * 60 * 60 * 1000, // 2 days default
+    maxAgeRememberMe: sessionRememberMeExpiration(),
     redis: getDefaultRedisConfig(),
   };
 }
@@ -90,6 +115,10 @@ export function getDefaultAuthConfig() {
   return {
     strategy: 'session' as const,
     session: getDefaultSessionConfig(),
+    jwt: {
+      expiresIn: accessTokenExpiration(),
+      refreshExpiresIn: refreshTokenExpiration(),
+    },
     cookies: {
       names: {
         accessToken: 'access-token',
@@ -97,7 +126,7 @@ export function getDefaultAuthConfig() {
       },
       options: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV?.toLowerCase() === 'production',
         sameSite: 'lax' as const,
         path: '/',
       },
