@@ -7,41 +7,46 @@
  * Get access token expiration time from environment or default
  * @returns Expiration time in milliseconds
  */
-export function accessTokenExpiration(): number {
+export function accessTokenExpiration(): string {
   const envToken = process.env.ACCESS_TOKEN_EXPIRATION;
-  const defaultToken = 1 * 24 * 60 * 60 * 1000; // 1 day default
+
+  const defaultToken = '1h';
 
   if (!envToken) {
     return defaultToken;
   }
 
-  const parsedToken = parseInt(envToken, 10);
-
-  if (isNaN(parsedToken) || parsedToken <= 0) {
-    return defaultToken;
-  }
-  return parsedToken;
+  return envToken;
 }
 
-/**
- * Get refresh token expiration time from environment or default
- * @returns Expiration time in milliseconds
- */
-export function refreshTokenExpiration(): number {
+export function sessionExpiration(): number {
+  const sessionExpiration = process.env.SESSION_EXPIRATION;
+
+  const defaultSessionExpiration = 2 * 24 * 60 * 60 * 1000;
+
+  if (!sessionExpiration) {
+    return defaultSessionExpiration;
+  }
+
+  const parsedSessionExpiration = parseInt(sessionExpiration, 10);
+
+  if (isNaN(parsedSessionExpiration) || parsedSessionExpiration <= 0) {
+    return defaultSessionExpiration;
+  }
+
+  return parsedSessionExpiration;
+}
+
+export function refreshTokenExpiration(): string {
   const envToken = process.env.REFRESH_TOKEN_EXPIRATION;
-  const defaultToken = 2 * 24 * 60 * 60 * 1000; // 2 days default
+
+  const defaultToken = '6h';
 
   if (!envToken) {
     return defaultToken;
   }
 
-  const parsedToken = parseInt(envToken, 10);
-
-  if (isNaN(parsedToken) || parsedToken <= 0) {
-    return defaultToken;
-  }
-
-  return parsedToken;
+  return envToken;
 }
 
 /**
@@ -71,7 +76,7 @@ export function getDefaultSessionConfig() {
       maxSessions: 3,
     },
     name: process.env.SESSION_NAME || 'sawtak-session-id',
-    maxAge: accessTokenExpiration(),
+    maxAge: sessionExpiration(),
     maxAgeRememberMe: 2 * 24 * 60 * 60 * 1000, // 2 days default
     redis: getDefaultRedisConfig(),
   };
