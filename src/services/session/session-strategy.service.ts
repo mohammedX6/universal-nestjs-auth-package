@@ -46,7 +46,7 @@ export class SessionStrategyService implements IAuthStrategy {
       );
 
       const sessionTimeout =
-        (input.options.rememberMe
+        (input.options.metadata.rememberMe
           ? this.authOptions?.session?.maxAgeRememberMe
           : this.authOptions?.session?.maxAge) || 24 * 60 * 60 * 1000; // 24 hours
 

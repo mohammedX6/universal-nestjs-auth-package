@@ -133,7 +133,9 @@ export class AuthHelperService {
 
       // Use session.maxAge directly (session timing is configured in session section only)
       const sessionMaxAge =
-        this.authOptions?.session?.maxAge || 24 * 60 * 60 * 1000; // 24 hours default
+        (rememberMe
+          ? this.authOptions?.session?.maxAgeRememberMe
+          : this.authOptions?.session?.maxAge) || 24 * 60 * 60 * 1000; // 24 hours default
 
       // Create unified auth input
       const authInput: UnifiedAuthInput = {
