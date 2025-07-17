@@ -50,7 +50,10 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
       // Session timeout in milliseconds - everything in milliseconds for consistency
       sessionTimeoutMs:
         this.sessionOptions?.maxAge ||
-        parseInt(process.env.SESSION_TIMEOUT || '86400') * 1000, // Convert env seconds to milliseconds
+        parseInt(process.env.SESSION_MAX_AGE || '86400') * 1000, // Convert env seconds to milliseconds
+      sessionTimeoutRememberMeMs:
+        this.sessionOptions?.maxAgeRememberMe ||
+        parseInt(process.env.SESSION_MAX_AGE_REMEMBER_ME || '86400') * 1000, // Convert env seconds to milliseconds
       extendOnActivity: true,
       cleanupInterval:
         parseInt(process.env.SESSION_CLEANUP_INTERVAL || '3600') * 1000, // Convert to milliseconds
@@ -284,8 +287,6 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
 
       // Check if session is active
       if (!session.isActive || session.state !== 'active') {
-        await this.destroySession(sessionId);
-
         return {
           isValid: false,
           status: 'invalid',
@@ -294,9 +295,9 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
       }
 
       // Update last activity if configured
-      //  if (this.config.extendOnActivity) {
-      await this.updateLastActivity(sessionId);
-      //   }
+      if (this.config.extendOnActivity) {
+        await this.updateLastActivity(sessionId);
+      }
 
       return {
         isValid: true,

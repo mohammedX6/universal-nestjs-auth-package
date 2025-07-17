@@ -45,7 +45,10 @@ export class SessionStrategyService implements IAuthStrategy {
         getClientIp(request),
       );
 
-      const sessionTimeout = input.options?.maxAge || 24 * 60 * 60 * 1000; // 24 hours
+      const sessionTimeout =
+        (input.options.rememberMe
+          ? this.authOptions?.session?.maxAgeRememberMe
+          : this.authOptions?.session?.maxAge) || 24 * 60 * 60 * 1000; // 24 hours
 
       const session = await this.sessionService.createSession(
         input.userData.userId,

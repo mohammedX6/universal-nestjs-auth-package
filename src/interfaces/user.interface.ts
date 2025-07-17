@@ -33,6 +33,7 @@ export interface UnifiedAuthInput {
   options?: {
     expiresIn?: string | number;
     maxAge?: number;
+    rememberMe?: boolean;
     metadata?: Record<string, any>;
   };
 }

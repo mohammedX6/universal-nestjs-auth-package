@@ -9,6 +9,7 @@ export interface SessionModuleOptions {
   secret: string;
   name?: string;
   maxAge?: number; // Base session duration in milliseconds
+  maxAgeRememberMe?: number; // Base session duration in milliseconds
   redis?: {
     host: string;
     port: number;

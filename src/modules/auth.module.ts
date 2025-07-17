@@ -9,7 +9,7 @@ import { AuthStrategyFactory } from '../services/auth-strategy.factory';
 import { AuthHelperService } from '../services/auth-helper.service';
 import { UnifiedAuthService } from '../services/unified-auth.service';
 import { JwtStrategy } from '../strategies/jwt.strategy';
-import { SessionModule } from './session.module';
+import { SessionModule, SessionModuleOptions } from './session.module';
 import { DeviceDetectionService } from '../services/device-detection.service';
 import { SessionStrategy } from '../strategies/session.strategy';
 import { SessionGuard, OptionalSessionGuard } from '../guards/session.guard';
@@ -43,23 +43,7 @@ export interface AuthModuleOptions {
   /**
    * Session configuration (required if strategy includes session)
    */
-  session?: {
-    secret: string;
-    name?: string;
-    maxAge?: number; // Base session duration in milliseconds (can be overridden by cookies.rememberMe settings)
-    maxAgeRememberMe?: number; // Session duration in milliseconds for remember me (default: 7 days)
-    redis?: {
-      host: string;
-      port: number;
-      password?: string;
-      db?: number;
-    };
-    multiSession?: {
-      enabled: boolean;
-      maxSessions?: number;
-      // Removed sessionTimeout - use maxAge for consistency, cookies.rememberMe for dynamic behavior
-    };
-  };
+  session?: SessionModuleOptions;
 
   /**
    * Cookie configuration for JWT tokens only
