@@ -243,7 +243,7 @@ export class UnifiedAuthService {
   async getUserSessions(
     userId: number,
     strategyType?: 'jwt' | 'session',
-  ): Promise<AuthSessionInfo[]> {
+  ): Promise<any[]> {
     try {
       if (strategyType) {
         const strategy = this.strategyFactory.createStrategy(strategyType);

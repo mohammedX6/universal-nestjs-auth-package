@@ -48,7 +48,7 @@ export interface IAuthStrategy {
    * @param userId - User ID
    * @returns Array of session/token information
    */
-  getUserSessions(userId: number): Promise<AuthSessionInfo[]>;
+  getUserSessions(userId: number): Promise<any[]>;
 
   /**
    * Invalidate all sessions/tokens for a user

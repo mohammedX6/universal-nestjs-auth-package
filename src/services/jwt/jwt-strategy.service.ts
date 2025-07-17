@@ -171,7 +171,7 @@ export class JwtStrategyService implements IAuthStrategy {
     }
   }
 
-  async getUserSessions(userId: number): Promise<AuthSessionInfo[]> {
+  async getUserSessions(userId: number): Promise<any[]> {
     return [];
   }
 

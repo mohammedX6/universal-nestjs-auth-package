@@ -48,3 +48,5 @@ export * from './config/default.config';
 
 // Legacy JWT Service - Only for backward compatibility, use UnifiedAuthService instead
 export * from './services/jwt/auth.service';
+
+export * from './services/session/session.service';

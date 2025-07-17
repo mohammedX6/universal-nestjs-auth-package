@@ -284,6 +284,8 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
 
       // Check if session is active
       if (!session.isActive || session.state !== 'active') {
+        await this.destroySession(sessionId);
+
         return {
           isValid: false,
           status: 'invalid',
@@ -292,9 +294,9 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
       }
 
       // Update last activity if configured
-      if (this.config.extendOnActivity) {
-        await this.updateLastActivity(sessionId);
-      }
+      //  if (this.config.extendOnActivity) {
+      await this.updateLastActivity(sessionId);
+      //   }
 
       return {
         isValid: true,
@@ -571,6 +573,60 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
         return currentSessionId
           ? this.invalidateOtherSessions(userId, currentSessionId)
           : this.invalidateAllUserSessions(userId);
+    }
+  }
+
+  /**
+   * Update specific fields for all active sessions of a user
+   * More granular control over what gets updated
+   * @param userId - User ID whose sessions to update
+   * @param fieldUpdates - Object with field names and new values
+   * @returns Number of sessions successfully updated
+   */
+  async updateSessionFields(
+    sessionId: string,
+    fieldUpdates: Record<string, any>,
+  ): Promise<number> {
+    try {
+      let updatedCount = 0;
+
+      const session = await this.getSession(sessionId);
+      if (session && session.isActive) {
+        // Create updated user data with specific field updates
+        const updatedUserData = { ...session.userData };
+
+        // Apply field updates
+        Object.keys(fieldUpdates).forEach((field) => {
+          if (field !== 'userId' && field !== 'id') {
+            // Protect critical ID fields
+            updatedUserData[field] = fieldUpdates[field];
+          }
+        });
+
+        // Update the session with new user data
+        const updatedSession: UserSession = {
+          ...session,
+          userData: updatedUserData,
+          lastActivity: new Date(),
+        };
+
+        const success = await this.storeSession(updatedSession);
+        if (success) {
+          updatedCount++;
+        }
+      }
+
+      this.logger.log(
+        `Updated fields in ${updatedCount} sessions for session ${sessionId}`,
+        fieldUpdates,
+      );
+      return updatedCount;
+    } catch (error) {
+      this.logger.error(
+        `Failed to update session fields for user ${sessionId}:`,
+        error,
+      );
+      return 0;
     }
   }
 
