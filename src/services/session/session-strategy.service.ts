@@ -139,26 +139,10 @@ export class SessionStrategyService implements IAuthStrategy {
   /**
    * Get all active sessions for a user
    */
-  async getUserSessions(userId: number): Promise<AuthSessionInfo[]> {
+  async getUserSessions(userId: number): Promise<any[]> {
     try {
       const sessions = await this.sessionService.getUserSessions(userId);
-
-      return sessions.map((session) => ({
-        id: session.sessionId,
-        userId: session.userId,
-        createdAt: session.createdAt,
-        lastActivity: session.lastActivity,
-        expiresAt: session.expiresAt,
-        isActive: session.isActive,
-        deviceInfo: {
-          userAgent: session.deviceInfo.userAgent,
-          ip: session.deviceInfo.ip,
-          deviceType: session.deviceInfo.deviceType,
-          browser: session.deviceInfo.browser,
-          os: session.deviceInfo.os,
-        },
-        metadata: session.metadata,
-      }));
+      return sessions;
     } catch (error) {
       return [];
     }
