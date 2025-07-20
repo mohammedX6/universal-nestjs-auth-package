@@ -176,6 +176,7 @@ export class AuthHelperService {
     response: Response,
     authResult: UnifiedAuthResult,
     rememberMe: boolean = false,
+    enableMaxAge: boolean = true,
   ): void {
     // Get configuration values
     const cookieNames = this.getCookieNames();
@@ -213,10 +214,16 @@ export class AuthHelperService {
 
     // Handle Session authentication - session ID with configured expiration for rememberMe
     if (authResult.authMethod === 'session' && authResult.sessionId) {
-      response.cookie(cookieNames.sessionId, authResult.sessionId, {
-        ...cookieOptions,
-        maxAge: sessionMaxAge,
-      });
+      if (enableMaxAge) {
+        response.cookie(cookieNames.sessionId, authResult.sessionId, {
+          ...cookieOptions,
+          maxAge: sessionMaxAge,
+        });
+      } else {
+        response.cookie(cookieNames.sessionId, authResult.sessionId, {
+          ...cookieOptions,
+        });
+      }
     }
   }
 
