@@ -1,6 +1,6 @@
 {
   "name": "universal-nestjs-auth-package",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "A comprehensive authentication package for NestJS applications providing JWT and session-based authentication with hybrid mode support, multi-device sessions, Redis integration, and Google OAuth.",
   "author": "mohammed_aljezawi",
   "license": "MIT",

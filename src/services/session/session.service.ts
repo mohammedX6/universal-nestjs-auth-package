@@ -780,10 +780,10 @@ export class SessionService implements OnModuleInit, OnModuleDestroy {
     await this.executeRedisOperation(async () => {
       const key = this.getUserSessionsKey(userId);
       await this.redisClient!.sAdd(key, sessionId);
-      await this.redisClient!.expire(
-        key,
-        Math.floor(this.config.sessionTimeoutMs / 1000),
-      );
+      // await this.redisClient!.expire(
+      //   key,
+      //   Math.floor(this.config.sessionTimeoutMs / 1000),
+      // );
     });
   }
 
